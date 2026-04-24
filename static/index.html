@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>RadioBook</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='8' y='14' width='48' height='44' rx='4' fill='%232a2018' stroke='%23d4a853' stroke-width='3'/%3E%3Ccircle cx='32' cy='34' r='14' fill='none' stroke='%23d4a853' stroke-width='2.5'/%3E%3Ccircle cx='32' cy='34' r='9' fill='none' stroke='%23d4a853' stroke-width='2'/%3E%3Ccircle cx='32' cy='34' r='4' fill='%23d4a853'/%3E%3Ccircle cx='22' cy='52' r='3.5' fill='%23d4a853'/%3E%3Cline x1='24' y1='14' x2='18' y2='4' stroke='%23d4a853' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=JetBrains+Mono:wght@400;500&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #1a1410;
+  --surface: #2a2018;
+  --surface2: #352a1e;
+  --surface3: #443626;
+  --amber: #d4a853;
+  --amber-dim: #8b7035;
+  --amber-glow: #e8c06a;
+  --amber-bright: #f5d98a;
+  --warm: #c49a6c;
+  --text: #e8dcc8;
+  --text-dim: #9a8b78;
+  --danger: #c45c4a;
+  --success: #6aaa5c;
+  --radius: 12px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Source Sans 3', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(212,168,83,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(196,154,108,0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* === HEADER === */
+.header {
+  padding: 24px 20px 16px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 4px;
+  color: var(--amber);
+  text-transform: uppercase;
+  text-shadow: 0 0 30px rgba(212,168,83,0.3);
+}
+
+.logo-sub {
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* === TABS === */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 16px 20px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.tab {
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--surface3);
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: 'Source Sans 3', sans-serif;
+}
+
+.tab:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.tab:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.tab:not(:last-child) { border-right: none; }
+
+.tab.active {
+  background: var(--surface2);
+  color: var(--amber);
+  border-color: var(--amber-dim);
+}
+
+/* === NOW PLAYING === */
+.now-playing {
+  margin: 20px 16px;
+  padding: 20px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--surface3);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.now-playing::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  opacity: 0.6;
+}
+
+.np-label {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--amber-dim);
+  margin-bottom: 8px;
+}
+
+.np-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--amber-glow);
+  margin-bottom: 4px;
+  text-shadow: 0 0 20px rgba(212,168,83,0.2);
+}
+
+.np-file {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+/* Progress bar */
+.progress-wrap {
+  position: relative;
+  height: 6px;
+  background: var(--surface3);
+  border-radius: 3px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber-dim), var(--amber));
+  border-radius: 3px;
+  transition: width 0.3s linear;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: -3px;
+  width: 12px;
+  height: 12px;
+  background: var(--amber-bright);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(212,168,83,0.6);
+}
+
+.progress-times {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.ctrl-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--surface3);
+  background: var(--surface2);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 18px;
+}
+
+.ctrl-btn:hover {
+  border-color: var(--amber-dim);
+  color: var(--amber);
+}
+
+.ctrl-btn:active {
+  transform: scale(0.95);
+}
+
+.ctrl-btn.play-btn {
+  width: 56px;
+  height: 56px;
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--bg);
+  font-size: 22px;
+  box-shadow: 0 0 20px rgba(212,168,83,0.3);
+}
+
+.ctrl-btn.play-btn:hover {
+  background: var(--amber-glow);
+  color: var(--bg);
+  box-shadow: 0 0 30px rgba(212,168,83,0.5);
+}
+
+/* === BOOKSHELF === */
+.content { padding:0 16px 100px; position:relative; z-index:1; }
+.section-title { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--text-dim); margin:20px 0 12px; padding-left:4px; }
+
+.shelf { position:relative; padding:0 4px; margin:16px 0 4px; }
+.shelf:first-child { margin-top:8px; }
+.shelf-books { display:flex; align-items:flex-end; gap:6px; padding:0 12px; min-height:170px; }
+.shelf-plank { height:10px; background:#5c3d1e; border-radius:2px; }
+.shelf-edge { height:4px; background:#4a3118; border-radius:0 0 2px 2px; }
+.shelf-shadow { height:6px; background:rgba(0,0,0,0.25); border-radius:0 0 4px 4px; }
+
+.bk { position:relative; cursor:pointer; transition:margin-top 0.25s; }
+.bk:hover { margin-top:-8px; }
+.bk.active { margin-top:-12px; }
+.bk[draggable="true"] { cursor:grab; }
+.bk.dragging { opacity:0.3; }
+.bk.drag-over-left { box-shadow:-3px 0 0 0 var(--amber); }
+.bk.drag-over-right { box-shadow:3px 0 0 0 var(--amber); }
+
+.bk-spine { border-radius:2px 3px 3px 2px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+
+.bk-title { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-90deg); transform-origin:center center; font-family:'Playfair Display',serif; font-weight:700; font-size:12px; letter-spacing:0.3px; line-height:1.25; text-align:center; white-space:normal; word-wrap:break-word; overflow-wrap:break-word; hyphens:auto; }
+
+.bk-band { position:absolute; bottom:12px; left:0; right:0; height:2px; opacity:0.35; }
+.bk-progress { position:absolute; bottom:0; left:0; right:0; height:6px; background:rgba(0,0,0,0.45); box-shadow:inset 0 1px 2px rgba(0,0,0,0.5); overflow:hidden; }
+.bk-progress-fill { height:100%; background:linear-gradient(to right, var(--amber-dim), var(--amber)); box-shadow:0 0 4px rgba(212,168,83,0.5); min-width:0; transition:width 0.3s; }
+.bk-progress-pct { position:absolute; bottom:8px; left:0; right:0; text-align:center; font-size:9px; font-weight:700; color:rgba(255,255,255,0.85); letter-spacing:0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.8); pointer-events:none; }
+
+.bk.active .bk-spine { outline:2px solid var(--amber); outline-offset:1px; }
+.bk-dot { position:absolute; top:5px; left:50%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--amber); opacity:0; }
+.bk.active .bk-dot { opacity:1; }
+
+.bk-menu-btn { position:absolute; top:-6px; right:-6px; width:22px; height:22px; background:var(--surface); border:1px solid var(--surface3); border-radius:4px; display:none; align-items:center; justify-content:center; font-size:14px; color:var(--text-dim); z-index:5; cursor:pointer; line-height:1; }
+.bk:hover .bk-menu-btn { display:flex; }
+.bk-menu-btn:hover { border-color:var(--amber-dim); color:var(--amber); }
+
+.bk-dropdown { position:absolute; top:18px; right:-6px; background:var(--surface); border:1px solid var(--surface3); border-radius:8px; padding:4px 0; z-index:10; min-width:160px; display:none; }
+.bk-dropdown.open { display:block; }
+.bk-dropdown-item { display:block; width:100%; padding:8px 14px; font-size:13px; font-family:'Source Sans 3',sans-serif; color:var(--text); background:none; border:none; text-align:left; cursor:pointer; transition:background 0.15s; }
+.bk-dropdown-item:hover { background:var(--surface2); }
+.bk-dropdown-item.danger { color:var(--danger); }
+.bk-dropdown-item.danger:hover { background:rgba(196,92,74,0.1); }
+.bk-dropdown-sep { height:1px; background:var(--surface3); margin:4px 0; }
+
+.scan-btn { font-size:11px; padding:6px 14px; border-radius:6px; border:1px solid var(--surface3); background:var(--surface2); color:var(--text-dim); cursor:pointer; letter-spacing:1px; text-transform:uppercase; font-family:'Source Sans 3',sans-serif; transition:all 0.2s; }
+.scan-btn:hover { border-color:var(--amber-dim); color:var(--amber); }
+
+
+/* === RADIO === */
+.radio-now { margin:16px 16px 12px; padding:16px; background:var(--surface); border-radius:var(--radius); border:1px solid var(--surface3); position:relative; overflow:hidden; z-index:1; }
+.radio-now::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; background:linear-gradient(90deg,transparent,var(--amber),transparent); opacity:0.6; }
+.radio-now-label { font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--amber-dim); margin-bottom:6px; }
+.radio-now-name { font-family:'Playfair Display',serif; font-size:20px; font-weight:700; color:var(--amber-glow); }
+.radio-now-genre { font-size:12px; color:var(--text-dim); margin-top:2px; }
+.radio-now-stop { position:absolute; right:16px; top:50%; transform:translateY(-50%); width:40px; height:40px; border-radius:50%; border:1px solid var(--surface3); background:var(--surface2); color:var(--text); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:all 0.2s; }
+.radio-now-stop:hover { border-color:var(--danger); color:var(--danger); }
+.radio-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; padding:0 16px; position:relative; z-index:1; }
+.radio-card { padding:14px 12px; background:var(--surface); border-radius:var(--radius); border:1px solid transparent; cursor:pointer; transition:all 0.2s; position:relative; text-align:center; }
+.radio-card:hover { border-color:var(--surface3); background:var(--surface2); }
+.radio-card.on { border-color:var(--amber-dim); background:var(--surface2); }
+.radio-card.on::after { content:''; position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%; background:var(--success); box-shadow:0 0 6px rgba(106,170,92,0.6); }
+.radio-dial { width:36px; height:36px; margin:0 auto 8px; border-radius:50%; border:2px solid var(--surface3); display:flex; align-items:center; justify-content:center; font-size:14px; transition:all 0.2s; }
+.radio-card:hover .radio-dial { border-color:var(--amber-dim); color:var(--amber); }
+.radio-card.on .radio-dial { border-color:var(--amber); color:var(--amber); box-shadow:0 0 10px rgba(212,168,83,0.3); }
+.radio-name { font-family:'Playfair Display',serif; font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.radio-genre { font-size:11px; color:var(--text-dim); }
+.radio-del { position:absolute; top:4px; right:4px; width:18px; height:18px; border-radius:4px; border:none; background:transparent; color:var(--text-dim); font-size:12px; cursor:pointer; display:none; align-items:center; justify-content:center; }
+.radio-card:hover .radio-del { display:flex; }
+.radio-del:hover { color:var(--danger); }
+.radio-add { padding:14px 12px; border:2px dashed var(--surface3); border-radius:var(--radius); cursor:pointer; text-align:center; transition:all 0.2s; color:var(--text-dim); font-size:13px; }
+.radio-add:hover { border-color:var(--amber-dim); color:var(--amber); }
+
+/* === UPLOAD === */
+.upload-area {
+  margin: 16px 0;
+  padding: 40px 20px;
+  border: 2px dashed var(--surface3);
+  border-radius: var(--radius);
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.upload-area:hover, .upload-area.dragover {
+  border-color: var(--amber-dim);
+  background: rgba(212,168,83,0.05);
+}
+
+.upload-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.upload-text strong {
+  color: var(--amber);
+}
+
+.upload-form {
+  margin-top: 20px;
+  display: none;
+}
+
+.upload-form.visible {
+  display: block;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--surface3);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'Source Sans 3', sans-serif;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--amber-dim);
+}
+
+.form-input::placeholder {
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+.file-list {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.file-item {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--surface3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 8px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Source Sans 3', sans-serif;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--amber);
+  color: var(--bg);
+}
+
+.btn-primary:hover {
+  background: var(--amber-glow);
+  box-shadow: 0 0 20px rgba(212,168,83,0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--surface3);
+}
+
+.btn-secondary:hover {
+  border-color: var(--amber-dim);
+}
+
+/* Upload progress */
+.upload-progress {
+  margin-top: 12px;
+  display: none;
+}
+
+.upload-progress.visible {
+  display: block;
+}
+
+.progress-outer {
+  height: 8px;
+  background: var(--surface3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber-dim), var(--amber));
+  border-radius: 4px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
+.progress-inner.processing {
+  background: linear-gradient(90deg, var(--amber-dim) 0%, var(--amber) 40%, var(--amber-glow) 50%, var(--amber) 60%, var(--amber-dim) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.upload-status.processing-status::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
+}
+
+.upload-status {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  text-align: center;
+}
+
+/* === EMPTY STATE === */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+/* === TOAST === */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 12px 24px;
+  background: var(--surface2);
+  border: 1px solid var(--surface3);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text);
+  z-index: 100;
+  transition: transform 0.3s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+  border-color: var(--danger);
+}
+
+/* === LOADING === */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--surface3);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* === CONFIRM MODAL === */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--surface3);
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 340px;
+  width: 90%;
+}
+
+.modal.wide {
+  max-width: 520px;
+}
+
+.modal.wide .modal-body {
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 0 -8px 16px;
+  padding: 0 8px;
+}
+
+.rb-search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rb-search-row .form-input {
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.rb-results {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rb-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--surface3);
+  border-radius: 8px;
+}
+
+.rb-result-info { flex: 1; min-width: 0; }
+.rb-result-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rb-result-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rb-result-add {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--amber-dim);
+  background: transparent;
+  color: var(--amber);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'Source Sans 3', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+}
+.rb-result-add:hover { background: var(--amber); color: var(--bg); }
+.rb-result-add.added { border-color: var(--success); color: var(--success); cursor: default; }
+.rb-result-add.added:hover { background: transparent; color: var(--success); }
+
+/* Preview button inside search results */
+.rb-result-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.rb-result-preview {
+  width: 32px; height: 32px;
+  padding: 0;
+  border: 1px solid var(--surface3);
+  background: transparent;
+  color: var(--text);
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.rb-result-preview:hover { border-color: var(--amber-dim); color: var(--amber); }
+.rb-result-preview.playing {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: rgba(212,168,83,0.12);
+  box-shadow: 0 0 8px rgba(212,168,83,0.25);
+}
+.rb-result-preview:disabled { opacity: 0.4; cursor: default; }
+
+/* Preview status banner on top of search modal */
+.rb-preview-banner {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: -4px 0 12px;
+  background: var(--surface2);
+  border: 1px solid var(--amber-dim);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+.rb-preview-banner.visible { display: flex; }
+.rb-preview-banner .spinner {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(212,168,83,0.6);
+  animation: rb-pulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes rb-pulse {
+  0%,100% { opacity: 0.4; transform: scale(0.85); }
+  50%     { opacity: 1;   transform: scale(1.15); }
+}
+.rb-preview-banner .rb-preview-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.rb-preview-banner .rb-preview-stop {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--surface3);
+  background: transparent;
+  color: var(--text);
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.rb-preview-banner .rb-preview-stop:hover { border-color: var(--danger); color: var(--danger); }
+
+/* Proxy checkbox in confirm-add step */
+.rb-confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+.rb-confirm-row input[type="checkbox"] { accent-color: var(--amber); }
+
+/* Proxy badge on station card */
+.radio-proxy-badge {
+  position: absolute;
+  bottom: 4px; right: 4px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(212,168,83,0.12);
+  color: var(--amber-dim);
+  border: 1px solid rgba(212,168,83,0.25);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* Station context menu (long-press or "…" style) */
+.radio-menu {
+  position: absolute;
+  top: 4px; left: 4px;
+  width: 18px; height: 18px;
+  border-radius: 4px; border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 14px; line-height: 1;
+  cursor: pointer;
+  display: none;
+  align-items: center; justify-content: center;
+}
+.radio-card:hover .radio-menu { display: flex; }
+.radio-menu:hover { color: var(--amber); }
+
+/* Popover menu */
+.radio-popover {
+  position: fixed;
+  z-index: 60;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--surface3);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  display: none;
+}
+.radio-popover.visible { display: block; }
+.radio-popover button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.radio-popover button:hover { background: var(--surface2); }
+.radio-popover button.danger:hover { background: rgba(203,66,57,0.18); color: var(--danger); }
+.radio-popover .sep { height: 1px; background: var(--surface3); margin: 4px 0; }
+
+/* Hidden stations list inside "Найти" modal */
+.rb-hidden-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--surface3);
+}
+.rb-hidden-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.rb-hidden-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--text);
+}
+.rb-hidden-row .rb-hidden-name { flex: 1; }
+.rb-hidden-row button {
+  padding: 4px 10px;
+  border: 1px solid var(--surface3);
+  background: transparent;
+  color: var(--amber);
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.rb-hidden-row button:hover { border-color: var(--amber); background: rgba(212,168,83,0.08); }
+
+.rb-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 24px 8px;
+}
+
+/* Catalog status row inside the RB search modal */
+.rb-catalog-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--surface3);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.rb-catalog-status { flex: 1; color: var(--text-dim); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rb-catalog-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+/* Banner above search results when they came from offline catalog */
+.rb-source-banner {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(212,168,83,0.08);
+  border: 1px solid rgba(212,168,83,0.25);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--amber-dim);
+  letter-spacing: 0.5px;
+}
+
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.modal-text {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* === AMP INDICATOR === */
+.amp-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-left: 12px;
+}
+
+.amp-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--surface3);
+}
+
+.amp-dot.on {
+  background: var(--success);
+  box-shadow: 0 0 8px rgba(106,170,92,0.5);
+}
+
+/* Responsive */
+@media (min-width: 600px) {
+  .header { padding-top: 40px; }
+  .logo { font-size: 36px; letter-spacing: 8px; }
+  .now-playing, .content { max-width: 560px; margin-left: auto; margin-right: auto; }
+  .tabs { max-width: 400px; margin-left: auto; margin-right: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">RadioBook</div>
+  <div class="logo-sub">audiobook player</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('player')">Плеер</button>
+  <button class="tab" onclick="switchTab('library')">Библиотека</button>
+  <button class="tab" onclick="switchTab('radio')">Радио</button>
+  <button class="tab" onclick="switchTab('upload')">Загрузить</button>
+</div>
+
+<!-- Player Tab -->
+<div id="tab-player">
+  <div class="now-playing" id="now-playing-card" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div class="np-label">Сейчас играет</div>
+      <div class="amp-indicator" id="amp-status" style="display:none">
+        <div class="amp-dot" id="amp-dot"></div>
+        <span id="amp-text">Усилитель</span>
+      </div>
+    </div>
+    <div class="np-title" id="np-title"></div>
+    <div class="np-file" id="np-file"></div>
+    <div class="progress-wrap" id="progress-bar" onclick="onProgressClick(event)">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-times">
+      <span id="time-current">0:00</span>
+      <span id="time-total">0:00</span>
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn" onclick="api('prev_file')" title="Предыдущий файл">⏮</button>
+      <button class="ctrl-btn" onclick="api('seek',{offset:-30})" title="-30 сек">↶</button>
+      <button class="ctrl-btn play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+      <button class="ctrl-btn" onclick="api('seek',{offset:30})" title="+30 сек">↷</button>
+      <button class="ctrl-btn" onclick="api('next_file')" title="Следующий файл">⏭</button>
+    </div>
+  </div>
+
+  <div id="no-book" class="empty-state">
+    <div class="empty-icon">📻</div>
+    <div class="empty-text">Нет выбранной книги</div>
+    <div style="font-size:13px;color:var(--text-dim)">Загрузите аудиокнигу и выберите для прослушивания</div>
+  </div>
+</div>
+
+<!-- Library Tab -->
+<div id="tab-library" style="display:none">
+  <div class="content">
+    <div id="book-shelves"></div>
+    <div id="library-empty" class="empty-state" style="display:none">
+      <div class="empty-icon">&#x1F4DA;</div>
+      <div class="empty-text">&#x0411;&#x0438;&#x0431;&#x043B;&#x0438;&#x043E;&#x0442;&#x0435;&#x043A;&#x0430; &#x043F;&#x0443;&#x0441;&#x0442;&#x0430;</div>
+      <div style="margin-top:16px">
+        <button class="scan-btn" onclick="scanBooks()">&#x27F3; &#x0421;&#x043A;&#x0430;&#x043D;&#x0438;&#x0440;&#x043E;&#x0432;&#x0430;&#x0442;&#x044C;</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Radio Tab -->
+<div id="tab-radio" style="display:none">
+  <div class="content">
+    <div id="radio-now-wrap"></div>
+    <div id="radio-grid" class="radio-grid"></div>
+  </div>
+</div>
+
+<!-- Upload Tab -->
+<div id="tab-upload" style="display:none">
+  <div class="content">
+    <div class="section-title">Загрузка книги</div>
+    
+    <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+      <div class="upload-icon">📁</div>
+      <div class="upload-text">
+        Перетащите аудиофайлы или <strong>нажмите</strong> для выбора
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:8px">
+        MP3, M4B, M4A, OGG, FLAC, OPUS, WAV
+      </div>
+    </div>
+    <input type="file" id="file-input" multiple accept=".mp3,.m4a,.m4b,.ogg,.opus,.flac,.wav,.aac,.wma" style="display:none" onchange="onFilesSelected(this.files)">
+
+    <div class="upload-form" id="upload-form">
+      <div class="form-group">
+        <label class="form-label">Название книги</label>
+        <input class="form-input" id="book-title-input" type="text" placeholder="Мастер и Маргарита">
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Обложка (необязательно)</label>
+        <input class="form-input" id="cover-input" type="file" accept="image/*" style="padding:8px">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" id="files-label">Файлы</label>
+        <div class="file-list" id="file-list-preview"></div>
+      </div>
+
+      <div class="upload-progress" id="upload-progress">
+        <div class="progress-outer">
+          <div class="progress-inner" id="upload-bar"></div>
+        </div>
+        <div class="upload-status" id="upload-status">Загрузка...</div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-primary" id="upload-btn" onclick="uploadBook()">Загрузить</button>
+        <button class="btn btn-secondary" onclick="cancelUpload()">Отмена</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-text" id="modal-text"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" id="modal-confirm" style="background:var(--danger)">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Radio Search Modal -->
+<div class="modal-overlay" id="rb-modal-overlay">
+  <div class="modal wide">
+    <div class="modal-title">Поиск станций</div>
+    <div class="modal-text" style="margin-bottom:14px">Каталог radio-browser.info — ~50 000 станций</div>
+
+    <!-- Preview banner (shown while previewing via Pi) -->
+    <div class="rb-preview-banner" id="rb-preview-banner">
+      <div class="spinner"></div>
+      <div style="flex-shrink:0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-dim)">Pi</div>
+      <div class="rb-preview-name" id="rb-preview-name">—</div>
+      <button class="rb-preview-stop" onclick="stopPreview()">Стоп</button>
+    </div>
+
+    <!-- Preview banner (browser-side playback) -->
+    <div class="rb-preview-banner rb-browser-banner" id="rb-browser-banner">
+      <div class="spinner"></div>
+      <div style="flex-shrink:0;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--amber-dim)">Браузер</div>
+      <div class="rb-preview-name" id="rb-browser-name">—</div>
+      <button class="rb-preview-stop" onclick="stopBrowserPreview()">Стоп</button>
+    </div>
+
+    <div class="rb-search-row">
+      <input class="form-input" id="rb-name" type="text" placeholder="Название (BBC, Эхо...)">
+      <input class="form-input" id="rb-country" type="text" placeholder="Страна (Russia, UK...)">
+    </div>
+    <div class="rb-search-row">
+      <input class="form-input" id="rb-tag" type="text" placeholder="Жанр (jazz, news...)">
+      <input class="form-input" id="rb-language" type="text" placeholder="Язык (russian...)">
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn btn-primary" id="rb-search-btn" onclick="doRadioSearch()" style="flex:1">Найти</button>
+      <button class="btn btn-secondary" onclick="closeRbSearch()">Закрыть</button>
+    </div>
+    <div class="rb-catalog-row">
+      <div id="rb-catalog-status" class="rb-catalog-status">…</div>
+      <button class="btn btn-secondary rb-catalog-btn" onclick="downloadCatalog()" title="Скачать полный каталог (~30 МБ)">⬇ Обновить</button>
+    </div>
+    <div class="modal-body">
+      <div id="rb-results"><div class="rb-hint">Введите критерии и нажмите «Найти»</div></div>
+      <div id="rb-hidden-wrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm-add Modal (after preview) -->
+<div class="modal-overlay" id="rb-confirm-overlay">
+  <div class="modal">
+    <div class="modal-title">Добавить станцию</div>
+    <div class="modal-text" id="rb-confirm-meta" style="margin-bottom:14px"></div>
+    <div class="form-group">
+      <label class="form-label">Название</label>
+      <input class="form-input" id="rb-confirm-name" type="text">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Жанр</label>
+      <input class="form-input" id="rb-confirm-genre" type="text">
+    </div>
+    <label class="rb-confirm-row">
+      <input type="checkbox" id="rb-confirm-proxy">
+      <span>Играть через прокси (для недоступных потоков)</span>
+    </label>
+    <div class="modal-actions" style="margin-top:18px">
+      <button class="btn btn-secondary" onclick="closeConfirmAdd()">Отмена</button>
+      <button class="btn btn-primary" id="rb-confirm-btn" onclick="confirmAddStation()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add-URL Modal (manual custom station) -->
+<div class="modal-overlay" id="url-modal-overlay">
+  <div class="modal">
+    <div class="modal-title">Добавить радио по URL</div>
+    <div class="modal-text" style="margin-bottom:14px">Введите прямую ссылку на аудиопоток.</div>
+    <div class="form-group">
+      <label class="form-label">Название</label>
+      <input class="form-input" id="url-name" type="text" placeholder="Моё радио">
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL потока</label>
+      <input class="form-input" id="url-stream" type="text" placeholder="https://...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Жанр</label>
+      <input class="form-input" id="url-genre" type="text" placeholder="Custom">
+    </div>
+    <label class="rb-confirm-row">
+      <input type="checkbox" id="url-proxy">
+      <span>Играть через прокси</span>
+    </label>
+    <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-secondary" id="url-browser-btn" onclick="browserPreviewUrl()" style="flex:1;min-width:120px">🎧 В браузере</button>
+      <button class="btn btn-secondary" id="url-preview-btn" onclick="previewUrl()" style="flex:1;min-width:120px">▶ На Pi</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-secondary" onclick="closeUrlModal()" style="flex:1">Отмена</button>
+      <button class="btn btn-primary" onclick="submitUrlModal()" style="flex:1">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Station context popover -->
+<div class="radio-popover" id="radio-popover"></div>
+
+
+<input type="file" id="add-files-input" multiple accept=".mp3,.m4a,.m4b,.ogg,.opus,.flac,.wav,.aac,.wma" style="display:none" onchange="doAddFiles(this.files)">
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// === State ===
+let currentStatus = null;
+let books = [];
+let selectedFiles = [];
+let statusInterval = null;
+
+// === API ===
+async function api(endpoint, body) {
+  try {
+    const opts = body !== undefined 
+      ? { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) }
+      : { method: 'POST' };
+    const res = await fetch('/api/' + endpoint, opts);
+    return await res.json();
+  } catch (e) {
+    console.error('API error:', e);
+    return null;
+  }
+}
+
+async function apiGet(endpoint) {
+  try {
+    const res = await fetch('/api/' + endpoint);
+    return await res.json();
+  } catch (e) {
+    console.error('API error:', e);
+    return null;
+  }
+}
+
+// === Tabs ===
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['player','library','radio','upload'][i] === tab);
+  });
+  document.getElementById('tab-player').style.display = tab === 'player' ? '' : 'none';
+  document.getElementById('tab-library').style.display = tab === 'library' ? '' : 'none';
+  document.getElementById('tab-radio').style.display = tab === 'radio' ? '' : 'none';
+  document.getElementById('tab-upload').style.display = tab === 'upload' ? '' : 'none';
+  
+  location.hash = tab;
+  if (tab === "library") loadBooks();
+  if (tab === "radio") loadRadio();
+}
+
+// === Player ===
+async function updateStatus() {
+  const s = await apiGet('status');
+  if (!s) return;
+  currentStatus = s;
+
+  const card = document.getElementById('now-playing-card');
+  const noBook = document.getElementById('no-book');
+
+  if (s.book && !s.radio_playing) {
+    card.style.display = '';
+    noBook.style.display = 'none';
+    document.getElementById('np-title').textContent = s.book.title;
+    document.getElementById('np-file').textContent = 
+      `Файл ${s.book.current_file_index + 1} из ${s.book.files_count}` + 
+      (s.book.current_file ? ` · ${s.book.current_file}` : '');
+    
+    const pos = s.book.position || 0;
+    // Use file duration for progress bar (shows meaningful progress)
+    const fileDur = s.book.file_duration || 0;
+    const totalDur = s.book.total_duration || 1;
+    // Progress bar shows position within current file
+    const pct = fileDur > 0 ? Math.min(100, (pos / fileDur) * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('time-current').textContent = formatTime(pos);
+    // Show file duration if available, otherwise total book duration
+    document.getElementById('time-total').textContent = fileDur > 0 ? formatTime(fileDur) : formatTime(totalDur);
+
+    const playBtn = document.getElementById('play-btn');
+    playBtn.textContent = s.playing ? '⏸' : '▶';
+  } else if (s.radio_playing) {
+    card.style.display = 'none';
+    noBook.style.display = 'none';
+  } else {
+    card.style.display = 'none';
+    noBook.style.display = '';
+  }
+
+  // Amp indicator
+  const ampEl = document.getElementById('amp-status');
+  if (s.amp_on !== null && s.amp_on !== undefined) {
+    ampEl.style.display = '';
+    document.getElementById('amp-dot').classList.toggle('on', s.amp_on);
+    document.getElementById('amp-text').textContent = s.amp_on ? 'Вкл' : 'Выкл';
+    // Disable play button when amp is off
+    var playBtn = document.getElementById('play-btn');
+    if (playBtn) {
+      playBtn.disabled = !s.amp_on;
+      playBtn.style.opacity = s.amp_on ? '' : '0.3';
+    }
+  }
+}
+
+async function togglePlay() {
+  if (currentStatus && currentStatus.playing) {
+    await api('pause');
+  } else {
+    var res = await api('play');
+    if (res && res.amp_off) {
+      toast('Включите радио', true);
+      return;
+    }
+  }
+  setTimeout(updateStatus, 200);
+}
+
+function onProgressClick(e) {
+  if (!currentStatus || !currentStatus.book) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  // Use file duration for seek target (progress bar shows per-file progress)
+  const fileDur = currentStatus.book.file_duration || currentStatus.book.total_duration || 0;
+  const targetPos = pct * fileDur;
+  const currentPos = currentStatus.book.position || 0;
+  api('seek', { offset: targetPos - currentPos });
+}
+
+// === Library ===
+async function loadBooks() {
+  var container = document.getElementById('book-shelves');
+  var empty = document.getElementById('library-empty');
+  try {
+    var res = await fetch('/api/books');
+    if (!res.ok) {
+      console.error('loadBooks: HTTP ' + res.status);
+      container.innerHTML = '<div style="color:var(--danger);padding:20px;text-align:center">Ошибка загрузки библиотеки (HTTP ' + res.status + ')</div>';
+      return;
+    }
+    var list = await res.json();
+  } catch (e) {
+    console.error('loadBooks error:', e);
+    container.innerHTML = '<div style="color:var(--danger);padding:20px;text-align:center">Ошибка соединения с сервером</div>';
+    return;
+  }
+  if (!list || !Array.isArray(list)) return;
+  books = list;
+  if (list.length === 0) { container.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  var COLORS = [
+    {bg:'#8b4513',fg:'#f5deb3'},{bg:'#2d4a3e',fg:'#a8d5ba'},
+    {bg:'#4a2545',fg:'#d4a0cf'},{bg:'#1e3a5f',fg:'#87b5d6'},
+    {bg:'#5c1a1a',fg:'#e8a8a8'},{bg:'#3d3520',fg:'#c9b896'},
+    {bg:'#2a4a2a',fg:'#b5d4a0'},{bg:'#4a3b0f',fg:'#e8d28a'},
+    {bg:'#3a2a4a',fg:'#b8a0d4'},{bg:'#1a3a3a',fg:'#8bc8c8'},
+    {bg:'#4a2a1a',fg:'#d4b08a'},{bg:'#2a2a4a',fg:'#a8a8d8'}
+  ];
+
+  function hashStr(s) {
+    var v = 0;
+    for (var i = 0; i < s.length; i++) v = ((v << 5) - v + s.charCodeAt(i)) | 0;
+    return Math.abs(v);
+  }
+
+  function renderBook(b) {
+    var c = COLORS[hashStr(b.id) % COLORS.length];
+    var pct = b.progress_pct != null ? b.progress_pct : 0;
+    var pctDisplay = Math.round(pct);
+    var ht = 170;
+    var w = Math.round(Math.min(62, Math.max(48, 44 + b.files_count * 0.5)));
+    var safe = escHtml(b.title).replace(/'/g, '&#39;');
+    var s = '';
+    s += '<div class="bk' + (b.is_current ? ' active' : '') + '" draggable="true" data-book-id="' + b.id + '" onclick="selectBook(\'' + b.id + '\')">'; 
+    s += '<div class="bk-menu-btn" onclick="event.stopPropagation();toggleMenu(\'' + b.id + '\')">&hellip;</div>';
+    s += '<div class="bk-dropdown" id="menu-' + b.id + '">';
+    s += '<button class="bk-dropdown-item" onclick="event.stopPropagation();closeMenus();renameBook(\'' + b.id + '\',\'' + safe + '\')">&#x270E; Переименовать</button>';
+    s += '<button class="bk-dropdown-item" onclick="event.stopPropagation();closeMenus();addFilesToBook(\'' + b.id + '\')">+ Добавить файлы</button>';
+    s += '<button class="bk-dropdown-item" onclick="event.stopPropagation();closeMenus();resetBook(\'' + b.id + '\')">↺ Сначала</button>';
+    s += '<div class="bk-dropdown-sep"></div>';
+    s += '<button class="bk-dropdown-item danger" onclick="event.stopPropagation();closeMenus();confirmDelete(\'' + b.id + '\',\'' + safe + '\')">&times; Удалить</button>';
+    s += '</div>';
+    s += '<div class="bk-spine" style="width:' + w + 'px;height:' + ht + 'px;background:' + c.bg + '">';
+    s += '<div class="bk-dot"></div>';
+    // After rotate(-90deg): title's width becomes visual height, title's max-height becomes visual width
+    var titleW = ht - 28; // leave room for dot on top and progress bar on bottom
+    var titleMaxH = w - 8;
+    s += '<span class="bk-title" style="color:' + c.fg + ';width:' + titleW + 'px;max-height:' + titleMaxH + 'px">' + escHtml(b.title) + '</span>';
+    s += '<div class="bk-band" style="background:' + c.fg + '"></div>';
+    s += '<div class="bk-progress"><div class="bk-progress-fill" style="width:' + pct.toFixed(1) + '%"></div>';
+    if (pct >= 1) s += '<div class="bk-progress-pct">' + pctDisplay + '%</div>';
+    s += '</div>';
+    s += '</div></div>';
+    return s;
+  }
+
+  function renderShelf(items) {
+    if (!items.length) return '';
+    var s = '<div class="shelf"><div class="shelf-books">';
+    for (var i = 0; i < items.length; i++) s += renderBook(items[i]);
+    s += '</div><div class="shelf-plank"></div><div class="shelf-edge"></div><div class="shelf-shadow"></div></div>';
+    return s;
+  }
+
+  function renderMultiShelf(items) {
+    if (!items.length) return '';
+    // Estimate books per shelf based on viewport width
+    // Each book is ~50-62px wide + 6px gap = ~60px, plus 24px shelf padding
+    var containerWidth = Math.max(300, (container.clientWidth || window.innerWidth - 32));
+    var booksPerShelf = Math.max(3, Math.floor((containerWidth - 24) / 62));
+    var out = '';
+    for (var i = 0; i < items.length; i += booksPerShelf) {
+      out += renderShelf(items.slice(i, i + booksPerShelf));
+    }
+    return out;
+  }
+
+  // Server returns books in shelf order (book_order) — use as-is
+  var out = renderMultiShelf(list);
+  out += '<div style="text-align:center;margin-top:20px"><button class="scan-btn" onclick="scanBooks()">&#x27F3; Сканировать папку</button></div>';
+  container.innerHTML = out;
+
+  // Bind drag & drop events
+  _initBookDragDrop();
+}
+
+function toggleMenu(bid) {
+  var m = document.getElementById('menu-' + bid);
+  var was = m.classList.contains('open');
+  closeMenus();
+  if (!was) m.classList.add('open');
+}
+function closeMenus() {
+  var dd = document.querySelectorAll('.bk-dropdown.open');
+  for (var i = 0; i < dd.length; i++) dd[i].classList.remove('open');
+}
+document.addEventListener('click', function() { closeMenus(); });
+
+// --- Drag & drop book reordering ---
+var _dragBookId = null;
+
+function _initBookDragDrop() {
+  var bks = document.querySelectorAll('.bk[draggable="true"]');
+  bks.forEach(function(el) {
+    el.addEventListener('dragstart', function(e) {
+      _dragBookId = el.getAttribute('data-book-id');
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', _dragBookId);
+    });
+    el.addEventListener('dragend', function() {
+      el.classList.remove('dragging');
+      _dragBookId = null;
+      // Clear all drag-over indicators
+      document.querySelectorAll('.drag-over-left,.drag-over-right').forEach(function(d) {
+        d.classList.remove('drag-over-left', 'drag-over-right');
+      });
+    });
+    el.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (el.getAttribute('data-book-id') === _dragBookId) return;
+      // Show indicator on left or right side depending on mouse position
+      var rect = el.getBoundingClientRect();
+      var mid = rect.left + rect.width / 2;
+      el.classList.remove('drag-over-left', 'drag-over-right');
+      if (e.clientX < mid) {
+        el.classList.add('drag-over-left');
+      } else {
+        el.classList.add('drag-over-right');
+      }
+    });
+    el.addEventListener('dragleave', function() {
+      el.classList.remove('drag-over-left', 'drag-over-right');
+    });
+    el.addEventListener('drop', function(e) {
+      e.preventDefault();
+      el.classList.remove('drag-over-left', 'drag-over-right');
+      var fromId = _dragBookId;
+      var toId = el.getAttribute('data-book-id');
+      if (!fromId || fromId === toId) return;
+      // Determine insert position: before or after target
+      var rect = el.getBoundingClientRect();
+      var mid = rect.left + rect.width / 2;
+      var insertBefore = e.clientX < mid;
+      // Build new order from current DOM
+      var allBks = document.querySelectorAll('.bk[data-book-id]');
+      var order = [];
+      allBks.forEach(function(b) { order.push(b.getAttribute('data-book-id')); });
+      // Remove dragged book from current position
+      order = order.filter(function(id) { return id !== fromId; });
+      // Find target position
+      var targetIdx = order.indexOf(toId);
+      if (!insertBefore) targetIdx++;
+      order.splice(targetIdx, 0, fromId);
+      // Send to server and reload
+      _sendBookOrder(order);
+    });
+  });
+}
+
+async function _sendBookOrder(order) {
+  try {
+    await fetch('/api/books/reorder', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({order: order}),
+    });
+    loadBooks();
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F \u043F\u043E\u0440\u044F\u0434\u043A\u0430', true);
+  }
+}
+
+async function selectBook(id) {
+  // If this book is already current and playing, do nothing
+  if (currentStatus && currentStatus.book && currentStatus.book.id === id && currentStatus.playing) {
+    toast('Уже играет');
+    return;
+  }
+  await api('select/' + id);
+  // Auto-play after selection
+  var res = await api('play');
+  if (res && res.amp_off) {
+    toast('Книга выбрана. Включите радио', true);
+  } else if (res && res.ok) {
+    toast('Воспроизведение начато');
+  } else {
+    toast('Книга выбрана');
+  }
+  loadBooks();
+  setTimeout(updateStatus, 300);
+}
+
+async function resetBook(id) {
+  await api('reset_position/' + id);
+  // If this is the current book, auto-play from start
+  if (currentStatus && currentStatus.book && currentStatus.book.id === id) {
+    var res = await api('play');
+    if (res && res.amp_off) {
+      toast('Сброшено. Включите радио', true);
+    } else {
+      toast('Воспроизведение с начала');
+    }
+  } else {
+    // Not current — select it first, then play
+    await api('select/' + id);
+    var res = await api('play');
+    if (res && res.amp_off) {
+      toast('Сброшено. Включите радио', true);
+    } else {
+      toast('Воспроизведение с начала');
+    }
+  }
+  loadBooks();
+  setTimeout(updateStatus, 300);
+}
+
+function confirmDelete(id, title) {
+  const overlay = document.getElementById('modal-overlay');
+  document.getElementById('modal-title').textContent = 'Удалить книгу?';
+  document.getElementById('modal-text').textContent = `"${title}" будет удалена навсегда.`;
+  document.getElementById('modal-confirm').onclick = async () => {
+    await fetch('/api/books/' + id, { method: 'DELETE' });
+    closeModal();
+    toast('Книга удалена');
+    loadBooks();
+    updateStatus();
+  };
+  overlay.classList.add('visible');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('visible');
+}
+
+// === Add files to existing book ===
+let addFilesBookId = null;
+
+function addFilesToBook(bookId) {
+  addFilesBookId = bookId;
+  document.getElementById('add-files-input').click();
+}
+
+async function doAddFiles(files) {
+  if (!files || !files.length || !addFilesBookId) return;
+
+  const formData = new FormData();
+  Array.from(files).forEach(f => formData.append('files', f));
+
+  const totalSize = Array.from(files).reduce((s,f) => s + f.size, 0);
+  toast('Загрузка ' + files.length + ' файл' + plural(files.length) + ' (' + formatSize(totalSize) + ')...');
+
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/books/' + addFilesBookId + '/add_files');
+
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        var pct = Math.round((e.loaded / e.total) * 100);
+        toast('Загрузка: ' + pct + '%');
+      }
+    };
+
+    const data = await new Promise(function(resolve, reject) {
+      xhr.onload = function() { resolve(JSON.parse(xhr.responseText)); };
+      xhr.onerror = function() { reject(new Error('Upload failed')); };
+      xhr.send(formData);
+    });
+
+    if (data.ok) {
+      toast('Добавлено ' + data.added + ' файл' + plural(data.added));
+    } else {
+      toast(data.error || 'Ошибка', true);
+    }
+  } catch (e) {
+    toast('Ошибка загрузки', true);
+  }
+
+  document.getElementById('add-files-input').value = '';
+  addFilesBookId = null;
+  loadBooks();
+}
+
+async function renameBook(id, currentTitle) {
+  var newTitle = prompt('Новое название:', currentTitle);
+  if (!newTitle || newTitle.trim() === '' || newTitle === currentTitle) return;
+  try {
+    const res = await fetch('/api/books/' + id + '/rename', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({title: newTitle.trim()})
+    });
+    const data = await res.json();
+    if (data.ok) {
+      toast('Переименовано');
+      loadBooks();
+      updateStatus();
+    } else {
+      toast(data.error || 'Ошибка', true);
+    }
+  } catch(e) {
+    toast('Ошибка', true);
+  }
+}
+
+async function scanBooks() {
+  toast('Сканирование...');
+  const res = await api('scan');
+  if (res && res.found > 0) {
+    toast(`Найдено изменений: ${res.found}`);
+  } else {
+    toast('Ничего нового не найдено');
+  }
+  loadBooks();
+}
+
+
+// === Radio ===
+var _activePreviewIdx = -1;       // index in rbLastResults currently previewed
+var _activePreviewUrlIdx = false; // true if previewing from URL-modal
+var _popoverStation = null;
+
+async function loadRadio() {
+  var list = await apiGet('radio/stations');
+  if (!list) return;
+  var grid = document.getElementById('radio-grid');
+  var nowWrap = document.getElementById('radio-now-wrap');
+
+  var playing = list.filter(function(s) { return s.is_playing; });
+  if (playing.length) {
+    var st = playing[0];
+    nowWrap.innerHTML = '<div class="radio-now">' +
+      '<div class="radio-now-label">' + escHtml(st.genre || 'Radio') + '</div>' +
+      '<div class="radio-now-name">' + escHtml(st.name) + '</div>' +
+      '<div class="radio-now-genre">\u25B6 \u0412 \u044D\u0444\u0438\u0440\u0435' +
+        (st.proxy ? ' \u00B7 proxy' : '') +
+        '</div>' +
+      '<div class="radio-now-stop" onclick="stopRadio()" title="\u0421\u0442\u043E\u043F">\u25A0</div>' +
+      '</div>';
+  } else {
+    nowWrap.innerHTML = '';
+  }
+
+  var html = '';
+  for (var i = 0; i < list.length; i++) {
+    var s = list[i];
+    var safe = escHtml(s.name).replace(/'/g, '&#39;');
+    html += '<div class="radio-card' + (s.is_playing ? ' on' : '') + '" onclick="playRadio(\'' + s.id + '\')">';
+    // Context menu button (all stations — custom and default)
+    html += '<button class="radio-menu" onclick="event.stopPropagation();openStationMenu(event,\'' + s.id + '\',\'' + safe + '\',' + (s.proxy ? 'true':'false') + ',' + (s.custom ? 'true':'false') + ')" title="\u041C\u0435\u043D\u044E">\u22EE</button>';
+    // Delete button (works for custom AND default — default gets hidden)
+    html += '<button class="radio-del" onclick="event.stopPropagation();deleteRadio(\'' + s.id + '\',\'' + safe + '\',' + (s.custom ? 'true':'false') + ')" title="\u0423\u0434\u0430\u043B\u0438\u0442\u044C">&times;</button>';
+    html += '<div class="radio-dial">\u25C9</div>';
+    html += '<div class="radio-name">' + escHtml(s.name) + '</div>';
+    html += '<div class="radio-genre">' + escHtml(s.genre || '') + '</div>';
+    if (s.proxy) html += '<div class="radio-proxy-badge">proxy</div>';
+    html += '</div>';
+  }
+  html += '<div class="radio-add" onclick="openRbSearch()">\uD83D\uDD0E \u041D\u0430\u0439\u0442\u0438</div>';
+  html += '<div class="radio-add" onclick="openUrlModal()">+ URL</div>';
+  grid.innerHTML = html;
+}
+
+async function playRadio(sid) {
+  var res = await api('radio/play/' + sid);
+  if (res && res.amp_off) { toast('Усилитель выключен', true); return; }
+  loadRadio();
+}
+async function stopRadio() { await api('radio/stop'); loadRadio(); }
+
+async function deleteRadio(sid, name, isCustom) {
+  var msg = isCustom
+    ? '\u0423\u0434\u0430\u043B\u0438\u0442\u044C "' + name + '"?'
+    : '\u0421\u043A\u0440\u044B\u0442\u044C "' + name + '"? \u041C\u043E\u0436\u043D\u043E \u0432\u0435\u0440\u043D\u0443\u0442\u044C \u0447\u0435\u0440\u0435\u0437 \u043C\u043E\u0434\u0430\u043B\u043A\u0443 \u043F\u043E\u0438\u0441\u043A\u0430.';
+  if (!confirm(msg)) return;
+  await fetch('/api/radio/stations/' + sid, {method:'DELETE'});
+  toast(isCustom ? '\u0423\u0434\u0430\u043B\u0435\u043D\u043E' : '\u0421\u043A\u0440\u044B\u0442\u043E');
+  loadRadio();
+}
+
+// --- Station context menu popover ---
+function openStationMenu(evt, sid, name, hasProxy, isCustom) {
+  var pop = document.getElementById('radio-popover');
+  _popoverStation = {sid: sid, name: name, proxy: hasProxy, custom: isCustom};
+  var parts = [];
+  if (hasProxy) {
+    parts.push('<button onclick="toggleStationProxy(false)">\u2713 \u0423\u0431\u0440\u0430\u0442\u044C \u043F\u0440\u043E\u043A\u0441\u0438</button>');
+  } else {
+    parts.push('<button onclick="toggleStationProxy(true)">\u2192 \u0418\u0433\u0440\u0430\u0442\u044C \u0447\u0435\u0440\u0435\u0437 \u043F\u0440\u043E\u043A\u0441\u0438</button>');
+  }
+  parts.push('<div class="sep"></div>');
+  parts.push('<button class="danger" onclick="deleteFromMenu()">' + (isCustom ? '\u0423\u0434\u0430\u043B\u0438\u0442\u044C' : '\u0421\u043A\u0440\u044B\u0442\u044C') + '</button>');
+  pop.innerHTML = parts.join('');
+  // position near the click
+  var rect = evt.currentTarget.getBoundingClientRect();
+  var top = rect.bottom + 4;
+  var left = rect.left;
+  pop.style.top = top + 'px';
+  pop.style.left = left + 'px';
+  pop.classList.add('visible');
+  // close on outside click
+  setTimeout(function() {
+    document.addEventListener('click', closeStationMenu, { once: true });
+  }, 0);
+}
+function closeStationMenu() {
+  document.getElementById('radio-popover').classList.remove('visible');
+  _popoverStation = null;
+}
+async function toggleStationProxy(enable) {
+  if (!_popoverStation) return;
+  var sid = _popoverStation.sid;
+  closeStationMenu();
+  var r = await fetch('/api/radio/stations/' + sid + '/proxy', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({proxy: !!enable}),
+  });
+  if (r.ok) {
+    toast(enable ? '\u0412\u043A\u043B\u044E\u0447\u0435\u043D\u043E \u0447\u0435\u0440\u0435\u0437 \u043F\u0440\u043E\u043A\u0441\u0438' : '\u041F\u0440\u043E\u043A\u0441\u0438 \u0441\u043D\u044F\u0442');
+    loadRadio();
+  } else {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430', true);
+  }
+}
+async function deleteFromMenu() {
+  if (!_popoverStation) return;
+  var s = _popoverStation;
+  closeStationMenu();
+  deleteRadio(s.sid, s.name, s.custom);
+}
+
+// === Radio catalog search (radio-browser.info) ===
+var rbLastResults = [];
+
+function openRbSearch() {
+  document.getElementById('rb-modal-overlay').classList.add('visible');
+  setTimeout(function() {
+    var el = document.getElementById('rb-name');
+    if (el) el.focus();
+  }, 50);
+  loadHiddenSection();  // show "restore" list if any
+  refreshCatalogStatus();
+}
+
+function closeRbSearch() {
+  document.getElementById('rb-modal-overlay').classList.remove('visible');
+  // If a preview is active, stop it — we're leaving the search UI
+  if (_activePreviewIdx >= 0 || _activePreviewUrlIdx) stopPreview();
+  if (_activeBrowserIdx >= 0 || _activeBrowserUrl) stopBrowserPreview();
+}
+
+async function doRadioSearch() {
+  var name = document.getElementById('rb-name').value.trim();
+  var country = document.getElementById('rb-country').value.trim();
+  var tag = document.getElementById('rb-tag').value.trim();
+  var language = document.getElementById('rb-language').value.trim();
+  if (!name && !country && !tag && !language) {
+    toast('\u0423\u043A\u0430\u0436\u0438\u0442\u0435 \u0445\u043E\u0442\u044F \u0431\u044B \u043E\u0434\u0438\u043D \u043A\u0440\u0438\u0442\u0435\u0440\u0438\u0439', true);
+    return;
+  }
+  var btn = document.getElementById('rb-search-btn');
+  var resBox = document.getElementById('rb-results');
+  btn.disabled = true;
+  btn.textContent = '\u0418\u0449\u0443...';
+  resBox.innerHTML = '<div class="rb-hint">\u041F\u043E\u0438\u0441\u043A \u0432 \u043A\u0430\u0442\u0430\u043B\u043E\u0433\u0435...</div>';
+
+  var params = new URLSearchParams();
+  if (name) params.set('name', name);
+  if (country) params.set('country', country);
+  if (tag) params.set('tag', tag);
+  if (language) params.set('language', language);
+  params.set('limit', '30');
+
+  try {
+    var r = await fetch('/api/radio/search?' + params.toString());
+    var data = await r.json();
+    if (!r.ok) {
+      resBox.innerHTML = '<div class="rb-hint" style="color:var(--danger)">' + escHtml(data.error || '\u041E\u0448\u0438\u0431\u043A\u0430') + '</div>';
+      return;
+    }
+    // New API shape: {source, results, ...}. Also handle legacy array.
+    var results, source, onlineErr, mtime;
+    if (Array.isArray(data)) {
+      results = data; source = 'online'; onlineErr = null;
+    } else {
+      results = data.results || [];
+      source = data.source || 'online';
+      onlineErr = data.online_error;
+      mtime = data.catalog_mtime;
+    }
+    rbLastResults = results;
+    if (!results.length) {
+      resBox.innerHTML = '<div class="rb-hint">\u041D\u0438\u0447\u0435\u0433\u043E \u043D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E</div>';
+      return;
+    }
+    var existing = await apiGet('radio/stations') || [];
+    var existingUrls = new Set(existing.map(function(s) { return (s.url||'').toLowerCase(); }));
+
+    var html = '';
+    // Source banner (only for offline results)
+    if (source === 'offline') {
+      var ageLabel = '';
+      if (mtime) {
+        var d = new Date(mtime * 1000);
+        ageLabel = ' \u00B7 \u0441\u043D\u0438\u043C\u043E\u043A \u043E\u0442 ' +
+          d.toLocaleDateString() + ' ' +
+          d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      }
+      html += '<div class="rb-source-banner">\uD83D\uDCBE \u041B\u043E\u043A\u0430\u043B\u044C\u043D\u044B\u0439 \u043A\u0430\u0442\u0430\u043B\u043E\u0433' + escHtml(ageLabel) +
+              (onlineErr ? ' \u00B7 \u043E\u043D\u043B\u0430\u0439\u043D \u043D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u0435\u043D' : '') +
+              '</div>';
+    }
+    html += '<div class="rb-results">';
+    for (var i = 0; i < results.length; i++) {
+      var s = results[i];
+      var already = existingUrls.has((s.url||'').toLowerCase());
+      var meta = [];
+      if (s.country) meta.push(s.country);
+      if (s.codec) meta.push(s.codec + (s.bitrate ? ' ' + s.bitrate + 'k' : ''));
+      if (s.tags) meta.push(s.tags.split(',').slice(0, 2).join(', '));
+      html += '<div class="rb-result">' +
+        '<div class="rb-result-info">' +
+          '<div class="rb-result-name">' + escHtml(s.name) + '</div>' +
+          '<div class="rb-result-meta">' + escHtml(meta.join(' \u00B7 ')) + '</div>' +
+        '</div>' +
+        '<div class="rb-result-actions">' +
+          '<button class="rb-result-preview rb-btn-browser" data-idx="' + i + '" onclick="toggleBrowserPreview(' + i + ')" title="\u0421\u043B\u0443\u0448\u0430\u0442\u044C \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435">\uD83C\uDFA7</button>' +
+          '<button class="rb-result-preview rb-btn-pi" data-idx="' + i + '" onclick="togglePreview(' + i + ')" title="\u0421\u043B\u0443\u0448\u0430\u0442\u044C \u043D\u0430 Pi">\u25B6</button>' +
+          '<button class="rb-result-add' + (already ? ' added' : '') + '" data-idx="' + i + '" onclick="openConfirmAdd(' + i + ', this)">' +
+            (already ? '\u2713' : '+') +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    }
+    html += '</div>';
+    resBox.innerHTML = html;
+  } catch (e) {
+    resBox.innerHTML = '<div class="rb-hint" style="color:var(--danger)">\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0442\u0438: ' + escHtml(String(e)) + '</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '\u041D\u0430\u0439\u0442\u0438';
+  }
+}
+
+// --- Local catalog (offline snapshot) ---
+var _catalogPollTimer = null;
+
+async function refreshCatalogStatus() {
+  try {
+    var r = await fetch('/api/radio/catalog/status');
+    var s = await r.json();
+    var el = document.getElementById('rb-catalog-status');
+    if (!el) return;
+    var parts = [];
+    if (s.file && s.file.exists) {
+      var mb = (s.file.size / (1024*1024)).toFixed(1);
+      var d = new Date(s.file.mtime * 1000);
+      parts.push('\u041A\u0430\u0442\u0430\u043B\u043E\u0433: ' + mb + ' \u041C\u0411, \u043E\u0431\u043D\u043E\u0432\u043B\u0451\u043D ' +
+                 d.toLocaleDateString() + ' ' +
+                 d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+    } else {
+      parts.push('\u041A\u0430\u0442\u0430\u043B\u043E\u0433 \u043D\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D');
+    }
+    if (s.downloading) {
+      var pct = s.total ? Math.round((s.progress / s.total) * 100) : 0;
+      var doneKb = Math.round(s.progress / 1024);
+      parts.push('\u2193 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0430: ' +
+                 (s.total ? pct + '% (' + doneKb + ' / ' + Math.round(s.total/1024) + ' \u041A\u0411)'
+                          : doneKb + ' \u041A\u0411'));
+    }
+    if (s.error && !s.downloading) {
+      parts.push('\u041E\u0448\u0438\u0431\u043A\u0430: ' + s.error);
+    }
+    el.textContent = parts.join(' \u00B7 ');
+
+    // Keep polling while a download is in progress
+    if (s.downloading) {
+      if (!_catalogPollTimer) _catalogPollTimer = setInterval(refreshCatalogStatus, 1500);
+    } else {
+      if (_catalogPollTimer) { clearInterval(_catalogPollTimer); _catalogPollTimer = null; }
+    }
+  } catch (e) { /* silent */ }
+}
+
+async function downloadCatalog() {
+  try {
+    var r = await fetch('/api/radio/catalog/download', {method:'POST'});
+    if (r.ok) {
+      toast('\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430 \u043A\u0430\u0442\u0430\u043B\u043E\u0433\u0430 \u043D\u0430\u0447\u0430\u0442\u0430');
+      refreshCatalogStatus();
+    }
+  } catch (e) { toast('\u041E\u0448\u0438\u0431\u043A\u0430', true); }
+}
+
+// --- Preview (listen before adding) ---
+var _previewTriedProxy = false;      // already tried proxy for current preview?
+var _previewWasViaProxy = false;     // current preview is running via proxy
+
+// Only update the "Pi" preview button (▶ ↔ ■)
+function setPreviewBtnState(idx, playing) {
+  var btns = document.querySelectorAll('.rb-btn-pi');
+  btns.forEach(function(b) {
+    var i = parseInt(b.getAttribute('data-idx'), 10);
+    if (i === idx && playing) {
+      b.classList.add('playing');
+      b.textContent = '\u25A0';
+    } else {
+      b.classList.remove('playing');
+      b.textContent = '\u25B6';
+    }
+  });
+}
+
+// Only update the "Browser" preview button (🎧 ↔ ■)
+function setBrowserBtnState(idx, playing) {
+  var btns = document.querySelectorAll('.rb-btn-browser');
+  btns.forEach(function(b) {
+    var i = parseInt(b.getAttribute('data-idx'), 10);
+    if (i === idx && playing) {
+      b.classList.add('playing');
+      b.textContent = '\u25A0';
+    } else {
+      b.classList.remove('playing');
+      b.textContent = '\uD83C\uDFA7';
+    }
+  });
+}
+
+function showPreviewBanner(name, viaProxy) {
+  var banner = document.getElementById('rb-preview-banner');
+  var nm = document.getElementById('rb-preview-name');
+  nm.textContent = (viaProxy ? '[proxy] ' : '') + name;
+  banner.classList.add('visible');
+}
+function hidePreviewBanner() {
+  document.getElementById('rb-preview-banner').classList.remove('visible');
+}
+
+async function togglePreview(idx) {
+  // If this row is already previewing — stop
+  if (_activePreviewIdx === idx) {
+    stopPreview();
+    return;
+  }
+  // Stop any browser-side preview
+  if (_activeBrowserIdx >= 0 || _activeBrowserUrl) stopBrowserPreview();
+  // If another preview active — stop it first, then start new
+  var s = rbLastResults[idx];
+  if (!s) return;
+  _previewTriedProxy = false;
+  _previewWasViaProxy = false;
+  await doPreview(idx, s.url, s.name, false);
+}
+
+async function doPreview(idx, url, name, viaProxy) {
+  var r;
+  try {
+    r = await fetch('/api/radio/preview', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({url: url, proxy: !!viaProxy}),
+    });
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0442\u0438', true);
+    return;
+  }
+  var data = {};
+  try { data = await r.json(); } catch (e) {}
+  if (!r.ok) {
+    if (data.amp_off) { toast('\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0440\u0430\u0434\u0438\u043E', true); return; }
+    toast(data.error || '\u041E\u0448\u0438\u0431\u043A\u0430', true);
+    return;
+  }
+  _activePreviewIdx = idx;
+  _activePreviewUrlIdx = false;
+  _previewWasViaProxy = !!data.proxy;
+  setPreviewBtnState(idx, true);
+  showPreviewBanner(name, _previewWasViaProxy);
+}
+
+async function stopPreview() {
+  if (_activePreviewIdx < 0 && !_activePreviewUrlIdx) return;
+  var prevIdx = _activePreviewIdx;
+  _activePreviewIdx = -1;
+  _activePreviewUrlIdx = false;
+  setPreviewBtnState(prevIdx, false);
+  hidePreviewBanner();
+  try {
+    await fetch('/api/radio/preview/stop', {method:'POST'});
+  } catch (e) {}
+  loadRadio();  // refresh "now playing" etc.
+}
+
+// --- Browser preview (HTML5 <audio>, plays locally — doesn't touch the Pi) ---
+var _browserAudio = null;          // single <audio> element, reused
+var _activeBrowserIdx = -1;         // index in rbLastResults, or -1
+var _activeBrowserUrl = false;      // true if previewing from URL modal
+
+function _ensureBrowserAudio() {
+  if (_browserAudio) return _browserAudio;
+  var a = new Audio();
+  a.preload = 'none';
+  // NOTE: do NOT set crossOrigin — radio streams don't support CORS headers,
+  // and setting crossOrigin='anonymous' causes the browser to block playback.
+  a.addEventListener('error', function() {
+    toast('\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0432\u043E\u0441\u043F\u0440\u043E\u0438\u0437\u0432\u0435\u0441\u0442\u0438 \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435', true);
+    stopBrowserPreview();
+  });
+  a.addEventListener('ended', stopBrowserPreview);
+  _browserAudio = a;
+  return a;
+}
+
+function showBrowserBanner(name) {
+  var banner = document.getElementById('rb-browser-banner');
+  if (!banner) return;
+  var nm = document.getElementById('rb-browser-name');
+  if (nm) nm.textContent = name || '';
+  banner.classList.add('visible');
+}
+function hideBrowserBanner() {
+  var banner = document.getElementById('rb-browser-banner');
+  if (banner) banner.classList.remove('visible');
+}
+
+function toggleBrowserPreview(idx) {
+  // Same row → stop
+  if (_activeBrowserIdx === idx) {
+    stopBrowserPreview();
+    return;
+  }
+  var s = rbLastResults[idx];
+  if (!s) return;
+
+  // Stop any ongoing Pi-preview first (they're mutually exclusive UX-wise)
+  if (_activePreviewIdx >= 0 || _activePreviewUrlIdx) {
+    stopPreview();
+  }
+  // Stop any previous browser-preview
+  if (_activeBrowserIdx >= 0 || _activeBrowserUrl) {
+    var prev = _activeBrowserIdx;
+    _activeBrowserIdx = -1;
+    _activeBrowserUrl = false;
+    setBrowserBtnState(prev, false);
+  }
+
+  var a = _ensureBrowserAudio();
+  try {
+    a.src = s.url;
+    a.play().then(function() {
+      _activeBrowserIdx = idx;
+      _activeBrowserUrl = false;
+      setBrowserBtnState(idx, true);
+      showBrowserBanner(s.name);
+    }).catch(function(err) {
+      // Most likely: mixed-content (http stream on https page) or CORS
+      console.error('Browser play failed:', err);
+      var msg = '\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0432\u043E\u0441\u043F\u0440\u043E\u0438\u0437\u0432\u0435\u0441\u0442\u0438';
+      if ((s.url || '').indexOf('http:') === 0 && location.protocol === 'https:') {
+        msg += ' (HTTP \u043F\u043E\u0442\u043E\u043A \u043D\u0430 HTTPS-\u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0435)';
+      }
+      toast(msg, true);
+      setBrowserBtnState(idx, false);
+    });
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430: ' + e.message, true);
+  }
+}
+
+function stopBrowserPreview() {
+  if (_activeBrowserIdx < 0 && !_activeBrowserUrl) return;
+  var prev = _activeBrowserIdx;
+  _activeBrowserIdx = -1;
+  _activeBrowserUrl = false;
+  setBrowserBtnState(prev, false);
+  hideBrowserBanner();
+  if (_browserAudio) {
+    try {
+      _browserAudio.pause();
+      _browserAudio.src = '';
+      _browserAudio.load();
+    } catch (e) {}
+  }
+  // Also reset URL-modal browser button label if any
+  var b = document.getElementById('url-browser-btn');
+  if (b) b.textContent = '\uD83C\uDFA7 \u0412 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435';
+}
+
+// URL-modal variant: play arbitrary URL in browser
+function browserPreviewUrl() {
+  var url = document.getElementById('url-stream').value.trim();
+  var name = document.getElementById('url-name').value.trim() || url;
+  if (!url) { toast('\u0412\u0432\u0435\u0434\u0438\u0442\u0435 URL', true); return; }
+  var btn = document.getElementById('url-browser-btn');
+
+  // Already playing from URL-modal — stop
+  if (_activeBrowserUrl) {
+    stopBrowserPreview();
+    return;
+  }
+
+  // Stop Pi-side URL preview if any
+  if (_activePreviewUrlIdx) stopPreview();
+  // Stop any result-row browser preview
+  if (_activeBrowserIdx >= 0) stopBrowserPreview();
+
+  var a = _ensureBrowserAudio();
+  try {
+    a.src = url;
+    a.play().then(function() {
+      _activeBrowserUrl = true;
+      _activeBrowserIdx = -1;
+      if (btn) btn.textContent = '\u25A0 \u0421\u0442\u043E\u043F';
+      showBrowserBanner(name);
+    }).catch(function(err) {
+      console.error('Browser play failed:', err);
+      var msg = '\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0432\u043E\u0441\u043F\u0440\u043E\u0438\u0437\u0432\u0435\u0441\u0442\u0438';
+      if ((url || '').indexOf('http:') === 0 && location.protocol === 'https:') {
+        msg += ' (HTTP \u043F\u043E\u0442\u043E\u043A \u043D\u0430 HTTPS-\u0441\u0442\u0440\u0430\u043D\u0438\u0446\u0435)';
+      }
+      toast(msg, true);
+    });
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430: ' + e.message, true);
+  }
+}
+
+// --- Confirm-add modal ---
+var _confirmCtx = null;  // { idx, name, genre, url, proxy, meta:{...} }
+
+function openConfirmAdd(idx, btnEl) {
+  var s = rbLastResults[idx];
+  if (!s || (btnEl && btnEl.classList.contains('added'))) return;
+
+  var genre = 'Radio';
+  if (s.tags) genre = s.tags.split(',')[0].trim() || genre;
+  else if (s.language) genre = s.language;
+  genre = genre.charAt(0).toUpperCase() + genre.slice(1);
+
+  _confirmCtx = {
+    idx: idx,
+    url: s.url,
+    sourceStation: s,
+    // If we previewed this row via proxy, suggest proxy on by default
+    suggestProxy: (_activePreviewIdx === idx && _previewWasViaProxy),
+  };
+
+  document.getElementById('rb-confirm-name').value = s.name || '';
+  document.getElementById('rb-confirm-genre').value = genre;
+  document.getElementById('rb-confirm-proxy').checked = !!_confirmCtx.suggestProxy;
+
+  var meta = [];
+  if (s.country) meta.push(s.country);
+  if (s.codec) meta.push(s.codec + (s.bitrate ? ' ' + s.bitrate + 'k' : ''));
+  document.getElementById('rb-confirm-meta').textContent = meta.join(' \u00B7 ') || s.url;
+
+  document.getElementById('rb-confirm-overlay').classList.add('visible');
+  setTimeout(function() {
+    var el = document.getElementById('rb-confirm-name');
+    if (el) { el.focus(); el.select(); }
+  }, 50);
+}
+
+function closeConfirmAdd() {
+  document.getElementById('rb-confirm-overlay').classList.remove('visible');
+  _confirmCtx = null;
+}
+
+async function confirmAddStation() {
+  if (!_confirmCtx) return;
+  var name = document.getElementById('rb-confirm-name').value.trim();
+  var genre = document.getElementById('rb-confirm-genre').value.trim() || 'Radio';
+  var useProxy = document.getElementById('rb-confirm-proxy').checked;
+  if (!name) { toast('\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435', true); return; }
+
+  var s = _confirmCtx.sourceStation;
+  var btn = document.getElementById('rb-confirm-btn');
+  btn.disabled = true;
+  try {
+    var r = await fetch('/api/radio/stations', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: name,
+        url: _confirmCtx.url,
+        genre: genre,
+        proxy: useProxy,
+        stationuuid: s.stationuuid,
+        country: s.country,
+        countrycode: s.countrycode,
+        codec: s.codec,
+        bitrate: s.bitrate,
+        favicon: s.favicon,
+      }),
+    });
+    var data = await r.json();
+    if (data.id) {
+      toast('\u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043E: ' + name);
+      // Mark the "+" button as done
+      var btns = document.querySelectorAll('.rb-result-add');
+      btns.forEach(function(b) {
+        if (parseInt(b.getAttribute('data-idx'),10) === _confirmCtx.idx) {
+          b.classList.add('added');
+          b.textContent = '\u2713';
+        }
+      });
+      closeConfirmAdd();
+      loadRadio();
+    } else {
+      toast(data.error || '\u041E\u0448\u0438\u0431\u043A\u0430', true);
+    }
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0442\u0438', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// --- Hidden stations section (restore UI) ---
+async function loadHiddenSection() {
+  var wrap = document.getElementById('rb-hidden-wrap');
+  try {
+    var r = await fetch('/api/radio/stations/hidden');
+    var list = await r.json();
+    if (!list || !list.length) { wrap.innerHTML = ''; return; }
+    var html = '<div class="rb-hidden-section">' +
+      '<div class="rb-hidden-title">\u0421\u043A\u0440\u044B\u0442\u044B\u0435 \u0434\u0435\u0444\u043E\u043B\u0442\u043D\u044B\u0435 (' + list.length + ')</div>';
+    for (var i = 0; i < list.length; i++) {
+      var h = list[i];
+      var safeSid = escHtml(h.id).replace(/'/g, '&#39;');
+      html += '<div class="rb-hidden-row">' +
+        '<div class="rb-hidden-name">' + escHtml(h.name) + ' <span style="color:var(--text-dim);font-size:11px">\u00B7 ' + escHtml(h.genre || '') + '</span></div>' +
+        '<button onclick="restoreHidden(\'' + safeSid + '\')">\u0412\u0435\u0440\u043D\u0443\u0442\u044C</button>' +
+      '</div>';
+    }
+    html += '</div>';
+    wrap.innerHTML = html;
+  } catch (e) {
+    wrap.innerHTML = '';
+  }
+}
+
+async function restoreHidden(sid) {
+  try {
+    await fetch('/api/radio/stations/' + encodeURIComponent(sid) + '/restore', {method:'POST'});
+    toast('\u0412\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u043E');
+    loadHiddenSection();
+    loadRadio();
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430', true);
+  }
+}
+
+// --- URL add modal (replaces prompt()) ---
+function openUrlModal() {
+  document.getElementById('url-name').value = '';
+  document.getElementById('url-stream').value = '';
+  document.getElementById('url-genre').value = '';
+  document.getElementById('url-proxy').checked = false;
+  var pb = document.getElementById('url-preview-btn');
+  if (pb) pb.textContent = '\u25B6 \u041D\u0430 Pi';
+  var bb = document.getElementById('url-browser-btn');
+  if (bb) bb.textContent = '\uD83C\uDFA7 \u0412 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435';
+  document.getElementById('url-modal-overlay').classList.add('visible');
+  setTimeout(function() {
+    var el = document.getElementById('url-name');
+    if (el) el.focus();
+  }, 50);
+}
+
+function closeUrlModal() {
+  if (_activePreviewUrlIdx) stopPreview();
+  if (_activeBrowserUrl) stopBrowserPreview();
+  document.getElementById('url-modal-overlay').classList.remove('visible');
+}
+
+async function previewUrl() {
+  var url = document.getElementById('url-stream').value.trim();
+  var useProxy = document.getElementById('url-proxy').checked;
+  var name = document.getElementById('url-name').value.trim() || url;
+  if (!url) { toast('\u0412\u0432\u0435\u0434\u0438\u0442\u0435 URL', true); return; }
+  var btn = document.getElementById('url-preview-btn');
+  // If already previewing this URL — stop
+  if (_activePreviewUrlIdx) {
+    stopPreview();
+    btn.textContent = '\u25B6 \u041D\u0430 Pi';
+    return;
+  }
+  // Stop browser-side preview if it was running
+  if (_activeBrowserUrl || _activeBrowserIdx >= 0) stopBrowserPreview();
+  btn.disabled = true;
+  try {
+    var r = await fetch('/api/radio/preview', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({url: url, proxy: useProxy}),
+    });
+    var data = await r.json();
+    if (!r.ok) {
+      if (data.amp_off) toast('\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u0435 \u0440\u0430\u0434\u0438\u043E', true);
+      else toast(data.error || '\u041E\u0448\u0438\u0431\u043A\u0430', true);
+      return;
+    }
+    _activePreviewIdx = -1;
+    _activePreviewUrlIdx = true;
+    _previewWasViaProxy = !!data.proxy;
+    btn.textContent = '\u25A0 \u0421\u0442\u043E\u043F';
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0442\u0438', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function submitUrlModal() {
+  var name = document.getElementById('url-name').value.trim();
+  var url = document.getElementById('url-stream').value.trim();
+  var genre = document.getElementById('url-genre').value.trim() || 'Custom';
+  var useProxy = document.getElementById('url-proxy').checked;
+  if (!name || !url) { toast('\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043D\u0430\u0437\u0432\u0430\u043D\u0438\u0435 \u0438 URL', true); return; }
+
+  // Stop any active preview first
+  if (_activePreviewUrlIdx) await stopPreview();
+  if (_activeBrowserUrl) stopBrowserPreview();
+
+  try {
+    var r = await fetch('/api/radio/stations', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({name: name, url: url, genre: genre, proxy: useProxy}),
+    });
+    var data = await r.json();
+    if (data.id) {
+      toast('\u0414\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u043E');
+      document.getElementById('url-modal-overlay').classList.remove('visible');
+      // reset preview button labels
+      var btn = document.getElementById('url-preview-btn');
+      if (btn) btn.textContent = '\u25B6 \u041D\u0430 Pi';
+      var bb = document.getElementById('url-browser-btn');
+      if (bb) bb.textContent = '\uD83C\uDFA7 \u0412 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435';
+      loadRadio();
+    } else {
+      toast(data.error || '\u041E\u0448\u0438\u0431\u043A\u0430', true);
+    }
+  } catch (e) {
+    toast('\u041E\u0448\u0438\u0431\u043A\u0430 \u0441\u0435\u0442\u0438', true);
+  }
+}
+
+// Enter key in search fields triggers search
+document.addEventListener('DOMContentLoaded', function() {
+  ['rb-name', 'rb-country', 'rb-tag', 'rb-language'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doRadioSearch();
+    });
+  });
+});
+
+// === Upload ===
+const dropZone = document.getElementById('drop-zone');
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  onFilesSelected(e.dataTransfer.files);
+});
+
+function onFilesSelected(files) {
+  if (!files || files.length === 0) return;
+  selectedFiles = Array.from(files);
+  
+  // Show form
+  document.getElementById('upload-form').classList.add('visible');
+  document.getElementById('files-label').textContent = `Файлы (${selectedFiles.length})`;
+  
+  // Auto-generate title from first filename
+  const titleInput = document.getElementById('book-title-input');
+  if (!titleInput.value) {
+    let name = selectedFiles[0].name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' ');
+    // Remove track numbers
+    name = name.replace(/^\d+\s*/, '');
+    titleInput.value = name;
+  }
+  
+  // Preview files
+  const preview = document.getElementById('file-list-preview');
+  const sorted = [...selectedFiles].sort((a,b) => a.name.localeCompare(b.name));
+  preview.innerHTML = sorted.map((f, i) => 
+    `<div class="file-item">${i+1}. ${escHtml(f.name)} (${formatSize(f.size)})</div>`
+  ).join('');
+}
+
+async function uploadBook() {
+  const title = document.getElementById('book-title-input').value.trim();
+  if (!title) { toast('Введите название', true); return; }
+  if (selectedFiles.length === 0) { toast('Выберите файлы', true); return; }
+
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+
+  const progressEl = document.getElementById('upload-progress');
+  const bar = document.getElementById('upload-bar');
+  const statusEl = document.getElementById('upload-status');
+  progressEl.classList.add('visible');
+
+  const formData = new FormData();
+  formData.append('title', title);
+  selectedFiles.sort((a,b) => a.name.localeCompare(b.name));
+  selectedFiles.forEach(f => formData.append('files', f));
+
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/books');
+    
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        bar.style.width = pct + '%';
+        if (pct < 100) {
+          statusEl.textContent = `Загрузка: ${pct}%`;
+        } else {
+          // Upload complete — server is now saving & probing files
+          statusEl.textContent = 'Обработка файлов на устройстве';
+          statusEl.classList.add('processing-status');
+          bar.classList.add('processing');
+        }
+      }
+    };
+
+    const result = await new Promise((resolve, reject) => {
+      xhr.onload = () => {
+        console.log('Upload response:', xhr.status, xhr.responseText.substring(0, 500));
+        if (xhr.status === 0) {
+          reject(new Error('Нет соединения с сервером'));
+          return;
+        }
+        if (xhr.status === 413) {
+          reject(new Error('Файлы слишком большие для сервера'));
+          return;
+        }
+        if (xhr.status >= 500) {
+          reject(new Error('Ошибка сервера (HTTP ' + xhr.status + ') — смотрите логи'));
+          return;
+        }
+        try {
+          const parsed = JSON.parse(xhr.responseText);
+          if (xhr.status >= 400) {
+            reject(new Error(parsed.error || ('HTTP ' + xhr.status)));
+            return;
+          }
+          resolve(parsed);
+        } catch (e) {
+          reject(new Error('Сервер вернул не-JSON (HTTP ' + xhr.status + ')'));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Сетевая ошибка'));
+      xhr.ontimeout = () => reject(new Error('Таймаут'));
+      xhr.send(formData);
+    });
+
+    bar.classList.remove('processing');
+    statusEl.classList.remove('processing-status');
+
+    // Upload cover if selected
+    const coverInput = document.getElementById('cover-input');
+    if (coverInput.files.length > 0 && result.id) {
+      const coverData = new FormData();
+      coverData.append('cover', coverInput.files[0]);
+      await fetch(`/api/books/${result.id}/cover`, { method: 'POST', body: coverData });
+    }
+
+    toast(`"${title}" загружена!`);
+    cancelUpload();
+    switchTab('library');
+  } catch (e) {
+    console.error('Upload error:', e);
+    toast(e.message || 'Ошибка загрузки', true);
+  } finally {
+    btn.disabled = false;
+    progressEl.classList.remove('visible');
+  }
+}
+
+function cancelUpload() {
+  selectedFiles = [];
+  document.getElementById('upload-form').classList.remove('visible');
+  document.getElementById('book-title-input').value = '';
+  document.getElementById('cover-input').value = '';
+  document.getElementById('file-input').value = '';
+  document.getElementById('file-list-preview').innerHTML = '';
+}
+
+// === Helpers ===
+function formatTime(s) {
+  if (!s || isNaN(s)) return '0:00';
+  s = Math.round(s);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' КБ';
+  return (bytes/1024/1024).toFixed(1) + ' МБ';
+}
+
+function plural(n) {
+  if (n % 10 === 1 && n % 100 !== 11) return '';
+  if ([2,3,4].includes(n%10) && ![12,13,14].includes(n%100)) return 'а';
+  return 'ов';
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+var _toastTimer = null;
+function toast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+  if (!el.classList.contains('show')) {
+    el.classList.add('show');
+  }
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { el.classList.remove('show'); _toastTimer = null; }, 2500);
+}
+
+// === Init ===
+const initTab = location.hash.replace("#","") || "player";
+if (["player","library","radio","upload"].includes(initTab)) switchTab(initTab);
+updateStatus();
+statusInterval = setInterval(updateStatus, 2000);
+</script>
+</body>
+</html>
