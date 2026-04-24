@@ -64,7 +64,7 @@ Pi 3.3В ──[ 10кΩ ]──┬──► GPIO pin 1 (BCM)
 sudo apt update
 sudo apt install mpv python3-pip python3-venv ffmpeg
 
-git clone https://github.com/USERNAME/radiobook.git
+git clone https://github.com/Igor-Shabalin/old_radio.git
 cd radiobook
 python3 -m venv .venv
 .venv/bin/pip install flask requests
