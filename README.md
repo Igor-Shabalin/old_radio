@@ -1,6 +1,6 @@
 <img 
   width="860" 
-  height="1280" 
+  height="1100" 
   alt="RadioBook vintage radio" 
   src="https://raw.githubusercontent.com/Igor-Shabalin/old_radio/main/9e138a02.636e45ea_chatgpt_image_22_apr_2026_g_19_55_30.webp" 
 />
