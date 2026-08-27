@@ -5,7 +5,12 @@
   src="https://raw.githubusercontent.com/Igor-Shabalin/old_radio/main/9e138a02.636e45ea_chatgpt_image_22_apr_2026_g_19_55_30.webp" 
 />
 
-<img width="860" height="1280" alt="photo_2026-04-23_18-40-22 (2)" src="https://github.com/user-attachments/assets/02ccdabe-c408-4864-a84f-afca0b611f87" />
+<img 
+  width="860" 
+  height="900" 
+  alt="RadioBook vintage radio" 
+  src="https://raw.githubusercontent.com/Igor-Shabalin/old_radio/main/radio2.jpg" 
+/>
 
 
 
