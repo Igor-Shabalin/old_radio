@@ -188,7 +188,7 @@ GET  /api/radio/catalog/diag       # Диагностика каталога
 
 ## Совместимость
 
-Разработано и протестировано на Banana Pi M2 Zero (Armbian/Debian). Работает на любом Linux-одноплатнике: Raspberry Pi Zero/3/4/5, Orange Pi и др. Для теста можно запустить на обычном ПК с Linux/macOS (без GPIO).
+Разработано и протестировано на Rasperry Pi Zero 2W. Работает на любом Linux-одноплатнике: Raspberry Pi Zero/3/4/5, Banana Pi M2 Zero, Orange Pi (Armbian/Debian) и др. Для теста можно запустить на обычном ПК с Linux/macOS (без GPIO).
 
 ## Лицензия
 
