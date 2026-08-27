@@ -226,6 +226,34 @@ class AudioPlayer:
             return resp['data']
         return None
 
+    def get_media_title(self) -> Optional[str]:
+        """Currently announced track for a stream (ICY metadata).
+
+        mpv exposes the ICY title as `media-title`, but before the first
+        metadata packet arrives that property just mirrors the URL — so a
+        URL-looking value is treated as 'nothing yet'. Falls back to the
+        `icy-title` entry of the `metadata` property, which some streams
+        populate while media-title stays empty."""
+        resp = self._send_command({
+            'command': ['get_property', 'media-title']
+        })
+        title = resp.get('data') if resp else None
+        if isinstance(title, str):
+            title = title.strip()
+            if title and not title.startswith(('http://', 'https://')):
+                return title
+
+        resp = self._send_command({
+            'command': ['get_property', 'metadata']
+        })
+        meta = resp.get('data') if resp else None
+        if isinstance(meta, dict):
+            for key in ('icy-title', 'icy-name', 'title'):
+                val = meta.get(key)
+                if isinstance(val, str) and val.strip():
+                    return val.strip()
+        return None
+
     def is_playing(self) -> bool:
         """Check if actively playing (not paused)."""
         if self._process and self._process.poll() is not None:

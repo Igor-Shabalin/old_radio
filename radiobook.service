@@ -1,0 +1,19 @@
+[Unit]
+Description=RadioBook Audiobook Player
+After=network.target sound.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/radiobook
+ExecStart=/usr/bin/python3 /home/pi/radiobook/server.py
+Restart=always
+RestartSec=5
+Environment=RADIOBOOK_PORT=8080
+Environment=RADIOBOOK_BOOKS=/home/pi/radiobook/books
+Environment=RADIOBOOK_STATE=/home/pi/radiobook/state.json
+Environment=RADIOBOOK_GPIO=true
+Environment=RADIOBOOK_GPIO_PIN=17
+
+[Install]
+WantedBy=multi-user.target
