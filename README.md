@@ -7,7 +7,7 @@
 
 <img 
   width="860" 
-  height="900" 
+  height="920" 
   alt="RadioBook vintage radio" 
   src="https://raw.githubusercontent.com/Igor-Shabalin/old_radio/main/radio2.jpg" 
 />
